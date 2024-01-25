@@ -108,7 +108,6 @@ function calculateAverage(ID, providedLearnerSubmission, providedAssignmentGroup
     });
 
     average = average / amountOfAssignments;
-    console.log(average)
     return average;
 }
 
@@ -124,18 +123,33 @@ function generateResult(providedCourseInfo, providedLearnerSubmission, providedA
         studentID = element.learner_id;
     });
 
-
     // for however many students there are, generate an object to append to arrayOfStudentObject
     for (let i = 0; i < arrayOfStudentIDs.length; i++) {
         let studentObject = {};
         studentObject["ID"] = arrayOfStudentIDs[i];
         studentObject["Average"] = calculateAverage(arrayOfStudentIDs[i], providedLearnerSubmission, providedAssignmentGroup)
+        providedLearnerSubmission.forEach(element => {
+            let studentSubmittedDate = new Date(element.submission.submitted_at);
+            let assignmentDueDate = new Date(providedAssignmentGroup.assignments[element.assignment_id - 1].due_at);
+            let currentDate = new Date();
+            if (element.learner_id === arrayOfStudentIDs[i]) {
+                if ((studentSubmittedDate <= assignmentDueDate) && (assignmentDueDate < currentDate)) {
+                    studentObject[providedAssignmentGroup.assignments[element.assignment_id - 1].id] = element.submission.score / providedAssignmentGroup.assignments[element.assignment_id - 1].points_possible;
+                } else if ((studentSubmittedDate > assignmentDueDate) && (assignmentDueDate < currentDate)) {
+                    studentObject[providedAssignmentGroup.assignments[element.assignment_id - 1].id] = element.submission.score / (providedAssignmentGroup.assignments[element.assignment_id - 1].points_possible - 10);
+                }
+            }
+        });
         arrayOfStudentObjects.push(studentObject);
 
     }
 
     return arrayOfStudentObjects;
 }
+
 let result = generateResult(CourseInfo, LearnerSubmissions, AssignmentGroup);
 
+// for some reason I could not properly format the JSON.stringify output but the data is all there
+// 1 is assignment 1, 2, is assignment 2 with grade 1 meaning 100%, assignment 3 is not there due to not
+// being due yet, and late submission score deductions are also calculated
 console.log(JSON.stringify(result));
