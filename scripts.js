@@ -84,11 +84,6 @@ function calculateAverage(ID, providedLearnerSubmission, providedAssignmentGroup
     let currentYear = 2024
     let amountOfAssignments = 0;
 
-    //console.log(JSON.stringify(providedAssignmentGroup))
-    // assignment id=3 is not due yet, does not go into average
-
-    //console.log(JSON.stringify(providedLearnerSubmission))
-
     providedLearnerSubmission.forEach(assignment => {
         if (assignment.learner_id === ID) {
             providedAssignmentGroup.assignments.forEach(sourceAssignment => {
