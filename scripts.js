@@ -79,23 +79,63 @@ const LearnerSubmissions = [
 ];
 
 
-function calculateAverage(learnerData) {
+function calculateAverage(ID, providedLearnerSubmission, providedAssignmentGroup) {
+    let average = 0;
+    let currentYear = 2024
+    let amountOfAssignments = 0;
 
+    //console.log(JSON.stringify(providedAssignmentGroup))
+    // assignment id=3 is not due yet, does not go into average
+
+    //console.log(JSON.stringify(providedLearnerSubmission))
+
+    providedLearnerSubmission.forEach(assignment => {
+        if (assignment.learner_id === ID) {
+            providedAssignmentGroup.assignments.forEach(sourceAssignment => {
+                let studentSubmittedDate = new Date(assignment.submission.submitted_at);
+                let assignmentDueDate = new Date(sourceAssignment.due_at);
+                if ((assignment.assignment_id === sourceAssignment.id) && (parseInt(sourceAssignment.due_at) < currentYear)) {
+                    if (studentSubmittedDate <= assignmentDueDate) {
+                        average = average + assignment.submission.score / sourceAssignment.points_possible;
+                        amountOfAssignments = amountOfAssignments + 1;
+                    } else {
+                        average = average + assignment.submission.score / (sourceAssignment.points_possible - 10);
+                        amountOfAssignments = amountOfAssignments + 1;
+                    }
+                }
+            });
+        }
+    });
+
+    average = average / amountOfAssignments;
+    console.log(average)
+    return average;
 }
 
-function generateResult(providedCourseInfo, providedAssignmentGroup, providedLearnerSubmission) {
-    let amountOfLearners = 0;
-    let studentID = null;
+function generateResult(providedCourseInfo, providedLearnerSubmission, providedAssignmentGroup) {
+    let studentID = -1;
+    let arrayOfStudentObjects = [];
+    let arrayOfStudentIDs = [];
 
     providedLearnerSubmission.forEach(element => {
         if (studentID != element.learner_id) {
-            amountOfLearners = amountOfLearners + 1
+            arrayOfStudentIDs.push(element.learner_id);
         }
         studentID = element.learner_id;
     });
 
-    console.log(amountOfLearners);
-}
-let result = generateResult(CourseInfo, AssignmentGroup, LearnerSubmissions);
 
-console.log(result)
+    // for however many students there are, generate an object to append to arrayOfStudentObject
+    for (let i = 0; i < arrayOfStudentIDs.length; i++) {
+        let studentObject = {};
+        studentObject["ID"] = arrayOfStudentIDs[i];
+        studentObject["Average"] = calculateAverage(arrayOfStudentIDs[i], providedLearnerSubmission, providedAssignmentGroup)
+        arrayOfStudentObjects.push(studentObject);
+
+    }
+
+    return arrayOfStudentObjects;
+}
+let result = generateResult(CourseInfo, LearnerSubmissions, AssignmentGroup);
+
+console.log(JSON.stringify(result));
